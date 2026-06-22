@@ -1,0 +1,10 @@
+services:
+  serge-laptop-display:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: SergeLaptopDisplay
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env

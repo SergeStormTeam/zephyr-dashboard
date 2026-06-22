@@ -8,12 +8,12 @@ export const GraphGradient = (props: GraphProps) => {
             <stop
                 offset="5%"
                 stopColor={`var(--color-${props.id})`}
-                stopOpacity={0.8}
+                stopOpacity={1}
             />
             <stop
                 offset="40%"
                 stopColor={`var(--color-${props.id})`}
-                stopOpacity={0.1}
+                stopOpacity={0}
             />
         </linearGradient>
     )
