@@ -1,6 +1,8 @@
 # env
 
 .env
+versioninfo.json
+resource.syso
 
 # Logs
 logs

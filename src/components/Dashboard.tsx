@@ -5,7 +5,7 @@ import { AdminBar } from "./AdminBar"
 
 export const Dashboard = () => {
     return (
-        <div className="h-screen grid grid-rows-[auto_auto_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="h-dvh grid grid-rows-[auto_auto_minmax(0,1fr)_minmax(0,1fr)]">
             <div className="flex flex-row w-full p-[1vh] border">
                 <Header/>
             </div>

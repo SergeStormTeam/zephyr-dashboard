@@ -1,0 +1,96 @@
+name: Build Source For Release
+
+on:
+    release:
+        types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+        
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Install Go Dependencies
+        run: go mod download
+
+      - name: Build App
+        run: |
+          npm install
+          npm run build
+
+      - name: Run Go Build Non Windows
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o dashboard_linux .
+          GOOS=darwin GOARCH=amd64 go build -o dashboard_mac .
+          
+      - name: Install goversioninfo
+        run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+
+      - name: Add To Path
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Generate versioninfo.json
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          BUILD=${{ github.run_number }}
+
+          cat > versioninfo.json << EOF
+          {
+            "FixedFileInfo": {
+              "FileVersion": { "Major": ${MAJOR}, "Minor": ${MINOR}, "Patch": ${PATCH}, "Build": ${BUILD} },
+              "ProductVersion": { "Major": ${MAJOR}, "Minor": ${MINOR}, "Patch": ${PATCH}, "Build": ${BUILD} },
+              "FileFlagsMask": "3f",
+              "FileFlags": "00",
+              "FileOS": "040004",
+              "FileType": "01",
+              "FileSubType": "00"
+            },
+            "StringFileInfo": {
+              "CompanyName": "Serge Storm Team",
+              "FileDescription": "Dashboard used for viewing the data live from the Zephyr Probe",
+              "FileVersion": "${VERSION}.${BUILD}",
+              "InternalName": "myapp",
+              "LegalCopyright": "Copyright © $(date +%Y) Serge Storm Team",
+              "OriginalFilename": "myapp.exe",
+              "ProductName": "Zephyr Dashboard",
+              "ProductVersion": "${VERSION}"
+            },
+            "VarFileInfo": {
+              "Translation": { "LangID": "0409", "CharsetID": "04B0" }
+            },
+            "IconPath": "public/icon.ico"
+          }
+          EOF
+
+      - name: Generate resource file
+        run: goversioninfo -icon=public/icon.ico
+
+      - name: Run Go Build Windows
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o dashboard_windows .
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dashboard_windows
+            dashboard_linux
+            dashboard_mac
+      

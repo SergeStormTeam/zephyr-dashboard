@@ -123,13 +123,12 @@ export function ChartAreaInteractive() {
 	})
 
     return (
-        <Card className="pt-0 h-full w-full flex flex-col">
-            
+        <Card className="pt-0 h-full w-full flex flex-col"> 
             <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
                 <div className="grid flex-1 gap-1">
                     <CardTitle>Probe Data</CardTitle>
                     <CardDescription>
-                        Showing probew data for the last {tagDisplay}.
+                        Showing probe data for the last {tagDisplay}.
                     </CardDescription>
                 </div>
 
