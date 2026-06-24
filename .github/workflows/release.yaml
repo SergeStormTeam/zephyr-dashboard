@@ -1,7 +1,7 @@
 name: Build Source For Release
 on:
-    release:
-        types: [published]
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Node
-
         uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -25,7 +25,7 @@ jobs:
       - name: Install GTK/WebKit deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev
+          sudo apt-get install -y pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
 
       - name: Install Go Dependencies
         run: go mod download
@@ -36,7 +36,7 @@ jobs:
           npm run build
 
       - name: Build Linux Binary
-        run: go build -o dashboard_linux .
+        run: env CGO_ENABLED=1 go build -o dashboard_linux .
 
       - name: Upload Linux Binary
         uses: actions/upload-artifact@v4
@@ -48,8 +48,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Node
-
         uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -58,9 +58,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.26'
-
-      - name: Install WebKit deps
-        run: brew install pkg-config gtk+3 webkit2gtk
 
       - name: Install Go Dependencies
         run: go mod download
@@ -71,7 +68,7 @@ jobs:
           npm run build
 
       - name: Build Mac Binary
-        run: go build -o dashboard_mac .
+        run: env CGO_ENABLED=1 go build -o dashboard_mac .
 
       - name: Upload Mac Binary
         uses: actions/upload-artifact@v4
@@ -83,8 +80,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Node
-
         uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -114,6 +111,7 @@ jobs:
           MINOR=$(echo "$VERSION" | cut -d. -f2)
           PATCH=$(echo "$VERSION" | cut -d. -f3)
           BUILD=${{ github.run_number }}
+          CURRENT_YEAR=$(date +%Y)
           cat > versioninfo.json << EOF
           {
             "FixedFileInfo": {
@@ -129,9 +127,9 @@ jobs:
               "CompanyName": "Serge Storm Team",
               "FileDescription": "Dashboard used for viewing the data live from the Zephyr Probe",
               "FileVersion": "${VERSION}.${BUILD}",
-              "InternalName": "myapp",
-              "LegalCopyright": "Copyright © $(date +%Y) Serge Storm Team",
-              "OriginalFilename": "myapp.exe",
+              "InternalName": "dashboard_windows",
+              "LegalCopyright": "Copyright © ${CURRENT_YEAR} Serge Storm Team",
+              "OriginalFilename": "dashboard_windows.exe",
               "ProductName": "Zephyr Dashboard",
               "ProductVersion": "${VERSION}"
             },
@@ -141,11 +139,13 @@ jobs:
             "IconPath": "public/icon.ico"
           }
           EOF
+
       - name: Generate resource file
         run: goversioninfo -icon=public/icon.ico
 
       - name: Build Windows Binary
-        run: go build -o dashboard_windows.exe .
+        shell: bash
+        run: env CGO_ENABLED=1 go build -o dashboard_windows.exe .
 
       - name: Upload Windows Binary
         uses: actions/upload-artifact@v4
@@ -159,11 +159,13 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dashboard_linux/dashboard_linux
-            dashboard_mac/dashboard_mac
-            dashboard_windows/dashboard_windows.exe
+            artifacts/dashboard_linux/dashboard_linux
+            artifacts/dashboard_mac/dashboard_mac
+            artifacts/dashboard_windows/dashboard_windows.exe
